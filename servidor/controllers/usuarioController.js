@@ -1,6 +1,15 @@
 const Usuario = require('../models/Usuario');
+const bcryptjs = require('bcryptjs');
+const { validationResult } = require('express-validator');
 
 exports.crearUsuario = async (req, res) => {
+
+    //  Revisar si hay errores
+    const errors = validationResult(req);
+
+    if ( !errors.isEmpty() ) {
+        return res.status(400).json({errors: errors.array() });
+    }
 
     //  Extraer email y password
     const {email, password} = req.body;
@@ -15,6 +24,10 @@ exports.crearUsuario = async (req, res) => {
 
         //  Crear nuevo usuario
         usuario = new Usuario(req.body);
+
+        //  Hashear el password
+        const salt = await bcryptjs.genSalt(10);
+        usuario.password = await bcryptjs.hash(password, salt);
 
         //  Guardar usuario
         await usuario.save();
